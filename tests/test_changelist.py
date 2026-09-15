@@ -128,7 +128,10 @@ def test_readonly_fields_are_excluded_by_default(request_, site):
 
     album_admin = PartlyReadonlyAlbumAdmin(Album, site)
 
-    assert album_admin.get_radio_select_exclusive_fields(request_) == ()
+    # get_radio_select_exclusive_fields() itself does no filtering; that
+    # is _get_effective_radio_select_exclusive_fields()'s job.
+    assert album_admin.get_radio_select_exclusive_fields(request_) == ("is_featured",)
+    assert album_admin._get_effective_radio_select_exclusive_fields(request_) == ()
 
 
 def test_media_is_pulled_in_by_the_rendered_formset_when_a_field_is_radioized(request_, site):

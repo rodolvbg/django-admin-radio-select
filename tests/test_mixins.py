@@ -189,7 +189,10 @@ def test_form_field_type_overriding_model_field_type_is_radioized(request_, site
     assert isinstance(formset_class.form.base_fields["title"].widget, RadioCheckboxInput)
 
 
-def test_readonly_fields_are_excluded_by_default(request_, site):
+def test_get_radio_select_exclusive_fields_does_not_filter_readonly_fields_itself(request_, site):
+    # Filtering is _get_effective_radio_select_exclusive_fields()'s job,
+    # kept separate precisely so it still applies even when a subclass
+    # overrides get_radio_select_exclusive_fields() (see below).
     class PartlyReadonlyInline(ExclusiveRadioFieldsMixin, djadmin.TabularInline):
         model = Image
         radio_select_exclusive_fields = ("is_primary", "is_featured")
@@ -197,7 +200,8 @@ def test_readonly_fields_are_excluded_by_default(request_, site):
 
     inline = PartlyReadonlyInline(Album, site)
 
-    assert inline.get_radio_select_exclusive_fields(request_) == ("is_featured",)
+    assert inline.get_radio_select_exclusive_fields(request_) == ("is_primary", "is_featured")
+    assert inline._get_effective_radio_select_exclusive_fields(request_) == ("is_featured",)
 
 
 def test_readonly_field_does_not_crash_get_formset(request_, site):
@@ -216,6 +220,21 @@ def test_readonly_field_does_not_crash_get_formset(request_, site):
 
     assert "is_primary" not in formset_class.form.base_fields
     assert isinstance(formset_class.form.base_fields["is_featured"].widget, RadioCheckboxInput)
+
+
+def test_readonly_filtering_still_applies_when_get_radio_select_exclusive_fields_is_overridden(
+    request_, site
+):
+    class DynamicInline(ExclusiveRadioFieldsMixin, djadmin.TabularInline):
+        model = Image
+        readonly_fields = ("is_primary",)
+
+        def get_radio_select_exclusive_fields(self, request, obj=None):
+            return ("is_primary", "is_featured")
+
+    inline = DynamicInline(Album, site)
+
+    assert inline._get_effective_radio_select_exclusive_fields(request_) == ("is_featured",)
 
 
 def test_get_radio_select_exclusive_fields_overrides_the_attribute(request_, site):

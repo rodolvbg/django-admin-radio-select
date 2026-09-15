@@ -57,16 +57,23 @@ class ExclusiveRadioFieldsMixin(BaseModelAdmin):
     def get_radio_select_exclusive_fields(
         self, request: HttpRequest, obj: Model | None = None
     ) -> Sequence[str]:
+        return tuple(self.radio_select_exclusive_fields)
+
+    def _get_effective_radio_select_exclusive_fields(
+        self, request: HttpRequest, obj: Model | None = None
+    ) -> Sequence[str]:
         # A readonly field is never part of form.base_fields as an
         # editable widget (Django renders it as plain text instead), so
         # radioizing it would either be a no-op or, if it's also missing
         # from the form for that reason, raise ImproperlyConfigured for
         # something the caller didn't really misconfigure — e.g. a field
         # only made readonly for some requests via get_readonly_fields.
+        # Kept separate from get_radio_select_exclusive_fields() so this
+        # filtering applies whether or not that method is overridden.
         readonly_fields = set(self.get_readonly_fields(request, obj))
         return tuple(
             field_name
-            for field_name in self.radio_select_exclusive_fields
+            for field_name in self.get_radio_select_exclusive_fields(request, obj)
             if field_name not in readonly_fields
         )
 
@@ -74,12 +81,12 @@ class ExclusiveRadioFieldsMixin(BaseModelAdmin):
         self, request: HttpRequest, obj: Model | None = None, **kwargs: Any
     ) -> type[BaseInlineFormSet]:
         formset_class = super().get_formset(request, obj, **kwargs)  # type: ignore[misc]
-        field_names = tuple(self.get_radio_select_exclusive_fields(request, obj))
+        field_names = self._get_effective_radio_select_exclusive_fields(request, obj)
         return self._wrap_formset(formset_class, field_names)
 
     def get_changelist_formset(self, request: HttpRequest, **kwargs: Any) -> type[BaseModelFormSet]:
         formset_class = super().get_changelist_formset(request, **kwargs)  # type: ignore[misc]
-        field_names = tuple(self.get_radio_select_exclusive_fields(request))
+        field_names = self._get_effective_radio_select_exclusive_fields(request)
         return self._wrap_formset(formset_class, field_names)
 
     @staticmethod
