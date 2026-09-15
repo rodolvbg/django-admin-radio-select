@@ -1,5 +1,12 @@
 # django-admin-radio-select
 
+[![Python tests](https://github.com/rodolvbg/django-admin-radio-select/actions/workflows/pytest.yml/badge.svg)](https://github.com/rodolvbg/django-admin-radio-select/actions/workflows/pytest.yml)
+[![JavaScript tests](https://github.com/rodolvbg/django-admin-radio-select/actions/workflows/js-tests.yml/badge.svg)](https://github.com/rodolvbg/django-admin-radio-select/actions/workflows/js-tests.yml)
+[![Current version on PyPI](https://img.shields.io/pypi/v/django-admin-radio-select.svg)](https://pypi.org/project/django-admin-radio-select/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/django-admin-radio-select)](https://pypi.org/project/django-admin-radio-select/)
+[![PyPI - Django Version](https://img.shields.io/pypi/djversions/django-admin-radio-select)](https://pypi.org/project/django-admin-radio-select/)
+[![Downloads](https://static.pepy.tech/personalized-badge/django-admin-radio-select?period=month&units=international_system&left_color=black&right_color=blue&left_text=Downloads/month)](https://pepy.tech/project/django-admin-radio-select)
+
 Synchronize BooleanFields across Django Admin inline rows as mutually exclusive radio button groups.
 
 ## Problem
