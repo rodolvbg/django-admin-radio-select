@@ -18,8 +18,11 @@ class ImageStackedInline(RadioSelectMixin, admin.StackedInline):
 
 
 @admin.register(Album)
-class AlbumAdmin(admin.ModelAdmin):
+class AlbumAdmin(RadioSelectMixin, admin.ModelAdmin):
     inlines = [ImageTabularInline]
+    list_display = ("title", "is_featured")
+    list_editable = ("is_featured",)
+    radio_select_exclusive_fields = ("is_featured",)
 
 
 @admin.register(AlbumStacked)

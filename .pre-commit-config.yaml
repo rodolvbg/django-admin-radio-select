@@ -41,11 +41,16 @@ repos:
   - id: mypy
     name: mypy
     entry: mypy
-    language: system
+    language: python
+    additional_dependencies:
+    - mypy>=1.10
+    - django-stubs[compatible-mypy]>=5
+    - django>=4.2
+    - pytest-django>=4.8
     types: [python]
-    files: ^src/
+    files: ^(src|example)/
     pass_filenames: false
-    args: [src/django_admin_radio_select]
+    args: [src/django_admin_radio_select, example]
 
 - repo: https://github.com/tox-dev/pyproject-fmt
   rev: d600c142bb19f521ae6a6a345f94a2efd7937759  # frozen: v2.26.0

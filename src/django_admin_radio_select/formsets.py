@@ -1,27 +1,32 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
 
 from django import forms
 
 if TYPE_CHECKING:
-    from django.forms.models import BaseInlineFormSet
+    from django.forms.models import BaseModelFormSet
+
+_FormSetT = TypeVar("_FormSetT", bound="BaseModelFormSet")
 
 
 def make_radio_select_exclusive_formset(
-    formset_class: type[BaseInlineFormSet], field_names: Sequence[str]
-) -> type[BaseInlineFormSet]:
+    formset_class: type[_FormSetT], field_names: Sequence[str]
+) -> type[_FormSetT]:
     """Return a subclass of ``formset_class`` whose ``clean()`` rejects
     more than one non-deleted form having any of ``field_names`` set to
     ``True``.
 
-    This is the server-side backstop for the client-side radio
-    behavior: JS keeps at most one row checked interactively, but a
+    Works the same for an inline's formset and for a ``ModelAdmin``
+    changelist's ``list_editable`` formset — both are ``BaseModelFormSet``
+    subclasses. This is the server-side backstop for the client-side
+    radio behavior: JS keeps at most one row checked interactively, but a
     handcrafted POST could still submit several. The check runs *after*
     ``formset_class``'s own ``clean()`` (via ``super()``), so whatever
-    validation a user-supplied ``InlineModelAdmin.formset`` already does
-    keeps running unchanged; this only adds to it.
+    validation a user-supplied ``InlineModelAdmin.formset`` (or
+    ``ModelAdmin.get_changelist_formset``) already does keeps running
+    unchanged; this only adds to it.
     """
 
     class RadioSelectExclusiveFormSet(formset_class):  # type: ignore[misc,valid-type]
