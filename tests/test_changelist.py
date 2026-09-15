@@ -8,7 +8,7 @@ from django.urls import reverse
 from gallery.admin import AlbumAdmin
 from gallery.models import Album
 
-from django_admin_radio_select import RadioSelectMixin
+from django_admin_radio_select import ExclusiveRadioFieldsMixin
 from django_admin_radio_select.widgets import RadioCheckboxInput
 
 pytestmark = pytest.mark.django_db
@@ -71,7 +71,7 @@ def test_rows_keep_independent_names_and_initial_state(request_, site, albums):
 
 
 def test_unconfigured_modeladmin_is_left_alone(request_, site):
-    class PlainAlbumAdmin(RadioSelectMixin, djadmin.ModelAdmin):
+    class PlainAlbumAdmin(ExclusiveRadioFieldsMixin, djadmin.ModelAdmin):
         list_display = ("title", "is_featured")
         list_editable = ("is_featured",)
         radio_select_exclusive_fields = ()
@@ -83,7 +83,7 @@ def test_unconfigured_modeladmin_is_left_alone(request_, site):
 
 
 def test_field_missing_from_list_editable_raises_improperly_configured(request_, site):
-    class BadAlbumAdmin(RadioSelectMixin, djadmin.ModelAdmin):
+    class BadAlbumAdmin(ExclusiveRadioFieldsMixin, djadmin.ModelAdmin):
         list_display = ("title",)
         list_editable = ()
         radio_select_exclusive_fields = ("is_featured",)
@@ -105,7 +105,7 @@ def test_field_not_on_model_but_declared_on_changelist_form_is_radioized(request
             model = Album
             fields = ["title", "is_featured"]
 
-    class ExtraFieldAlbumAdmin(RadioSelectMixin, djadmin.ModelAdmin):
+    class ExtraFieldAlbumAdmin(ExclusiveRadioFieldsMixin, djadmin.ModelAdmin):
         list_display = ("title", "is_featured", "approved")
         list_editable = ("is_featured",)
         radio_select_exclusive_fields = ("approved",)
@@ -120,7 +120,7 @@ def test_field_not_on_model_but_declared_on_changelist_form_is_radioized(request
 
 
 def test_readonly_fields_are_excluded_by_default(request_, site):
-    class PartlyReadonlyAlbumAdmin(RadioSelectMixin, djadmin.ModelAdmin):
+    class PartlyReadonlyAlbumAdmin(ExclusiveRadioFieldsMixin, djadmin.ModelAdmin):
         list_display = ("title", "is_featured")
         list_editable = ("is_featured",)
         radio_select_exclusive_fields = ("is_featured",)

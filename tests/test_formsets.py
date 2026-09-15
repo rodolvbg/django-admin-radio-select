@@ -4,7 +4,7 @@ from django.test import RequestFactory
 from gallery.admin import ImageTabularInline
 from gallery.models import Album, Image
 
-from django_admin_radio_select import RadioSelectMixin
+from django_admin_radio_select import ExclusiveRadioFieldsMixin
 
 pytestmark = pytest.mark.django_db
 
@@ -162,7 +162,7 @@ def test_user_supplied_formset_clean_is_preserved(request_, site, album):
             super().clean()
             calls.append("custom-clean-ran")
 
-    class CustomInline(RadioSelectMixin, djadmin.TabularInline):
+    class CustomInline(ExclusiveRadioFieldsMixin, djadmin.TabularInline):
         model = Image
         formset = CustomFormSet
         radio_select_exclusive_fields = ("is_primary",)

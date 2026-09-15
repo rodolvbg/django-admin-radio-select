@@ -39,7 +39,7 @@ uv add django-admin-radio-select
 pip install django-admin-radio-select
 ```
 
-Add the app so its static JS gets collected:
+Add it to `INSTALLED_APPS` — it's a real Django app (with its own `AppConfig`), which is what makes `django.contrib.staticfiles` pick up its JS:
 
 ```python
 INSTALLED_APPS = [
@@ -52,12 +52,12 @@ INSTALLED_APPS = [
 
 ```python
 from django.contrib import admin
-from django_admin_radio_select import RadioSelectMixin
+from django_admin_radio_select import ExclusiveRadioFieldsMixin
 
 from .models import Album, Image
 
 
-class ImageInline(RadioSelectMixin, admin.TabularInline):
+class ImageInline(ExclusiveRadioFieldsMixin, admin.TabularInline):
     model = Image
     radio_select_exclusive_fields = ("is_primary",)
 
@@ -70,7 +70,7 @@ class AlbumAdmin(admin.ModelAdmin):
 Works the same way with `StackedInline`:
 
 ```python
-class ImageInline(RadioSelectMixin, admin.StackedInline):
+class ImageInline(ExclusiveRadioFieldsMixin, admin.StackedInline):
     model = Image
     radio_select_exclusive_fields = ("is_primary",)
 ```
@@ -78,7 +78,7 @@ class ImageInline(RadioSelectMixin, admin.StackedInline):
 Multiple fields are independent groups:
 
 ```python
-class ImageInline(RadioSelectMixin, admin.TabularInline):
+class ImageInline(ExclusiveRadioFieldsMixin, admin.TabularInline):
     model = Image
     radio_select_exclusive_fields = ("is_primary", "is_featured")
 ```
@@ -86,7 +86,7 @@ class ImageInline(RadioSelectMixin, admin.TabularInline):
 Compute the field list per request (and, for an inline or a change form, per object) instead of (or in addition to) the class attribute:
 
 ```python
-class ImageInline(RadioSelectMixin, admin.TabularInline):
+class ImageInline(ExclusiveRadioFieldsMixin, admin.TabularInline):
     model = Image
 
     def get_radio_select_exclusive_fields(self, request, obj=None):
@@ -95,7 +95,7 @@ class ImageInline(RadioSelectMixin, admin.TabularInline):
 
 The default implementation already drops any field that's currently in `get_readonly_fields(request, obj)` — a readonly field isn't rendered as an editable widget at all, so there's nothing to turn into a radio button. This matters for a field that's only conditionally readonly (permissions, object state, ...): without it, a field in `radio_select_exclusive_fields` that becomes readonly for some request would no longer be on the form at all and raise `ImproperlyConfigured`, for a state the admin class itself put it in. Overriding `get_radio_select_exclusive_fields` replaces this default entirely, so an override that needs the same behavior should apply its own `get_readonly_fields` check too.
 
-Each configured name must be a `BooleanField` present on the form; anything else raises `ImproperlyConfigured` when the admin builds the formset (a `python manage.py check`-time-ish failure, not a silent no-op).
+Each configured name must be a `BooleanField` present on the **form** — anything else raises `ImproperlyConfigured` when the admin builds the formset (a `python manage.py check`-time-ish failure, not a silent no-op). "Present on the form" is deliberate: the field only has to exist there, not on the model. A field declared only on a custom `ModelForm`/`InlineModelAdmin.form` (not a real model field at all) works exactly the same as any other configured field, and so does a form field that overrides the model's own type for that name (e.g. the model has a `CharField` but the form redeclares it as a `BooleanField`) — this package never inspects the model, only `form.base_fields`.
 
 ### `ModelAdmin` changelist (`list_editable`)
 
@@ -103,7 +103,7 @@ The same mixin also works directly on a `ModelAdmin`, for a `BooleanField` colum
 
 ```python
 @admin.register(Album)
-class AlbumAdmin(RadioSelectMixin, admin.ModelAdmin):
+class AlbumAdmin(ExclusiveRadioFieldsMixin, admin.ModelAdmin):
     list_display = ("title", "is_featured")
     list_editable = ("is_featured",)
     radio_select_exclusive_fields = ("is_featured",)

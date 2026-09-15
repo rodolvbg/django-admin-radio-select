@@ -1,24 +1,24 @@
 from django.contrib import admin
 
-from django_admin_radio_select import RadioSelectMixin
+from django_admin_radio_select import ExclusiveRadioFieldsMixin
 
 from .models import Album, AlbumStacked, Image
 
 
-class ImageTabularInline(RadioSelectMixin, admin.TabularInline):
+class ImageTabularInline(ExclusiveRadioFieldsMixin, admin.TabularInline):
     model = Image
     extra = 3
     radio_select_exclusive_fields = ("is_primary", "is_featured")
 
 
-class ImageStackedInline(RadioSelectMixin, admin.StackedInline):
+class ImageStackedInline(ExclusiveRadioFieldsMixin, admin.StackedInline):
     model = Image
     extra = 3
     radio_select_exclusive_fields = ("is_primary", "is_featured")
 
 
 @admin.register(Album)
-class AlbumAdmin(RadioSelectMixin, admin.ModelAdmin):
+class AlbumAdmin(ExclusiveRadioFieldsMixin, admin.ModelAdmin):
     inlines = [ImageTabularInline]
     list_display = ("title", "is_featured")
     list_editable = ("is_featured",)

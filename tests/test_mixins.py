@@ -7,7 +7,7 @@ from django.test import RequestFactory
 from gallery.admin import ImageStackedInline, ImageTabularInline
 from gallery.models import Album, Image
 
-from django_admin_radio_select import RadioSelectMixin
+from django_admin_radio_select import ExclusiveRadioFieldsMixin
 from django_admin_radio_select.widgets import RadioCheckboxInput
 
 pytestmark = pytest.mark.django_db
@@ -112,7 +112,7 @@ def test_empty_form_template_shares_the_group_key_with_real_rows(request_, site,
 
 
 def test_unconfigured_field_is_left_alone(request_, site):
-    class PlainInline(RadioSelectMixin, djadmin.TabularInline):
+    class PlainInline(ExclusiveRadioFieldsMixin, djadmin.TabularInline):
         model = Image
         radio_select_exclusive_fields = ()
 
@@ -123,7 +123,7 @@ def test_unconfigured_field_is_left_alone(request_, site):
 
 
 def test_non_boolean_field_raises_improperly_configured(request_, site):
-    class BadInline(RadioSelectMixin, djadmin.TabularInline):
+    class BadInline(ExclusiveRadioFieldsMixin, djadmin.TabularInline):
         model = Image
         radio_select_exclusive_fields = ("title",)
 
@@ -134,7 +134,7 @@ def test_non_boolean_field_raises_improperly_configured(request_, site):
 
 
 def test_missing_field_raises_improperly_configured(request_, site):
-    class BadInline(RadioSelectMixin, djadmin.TabularInline):
+    class BadInline(ExclusiveRadioFieldsMixin, djadmin.TabularInline):
         model = Image
         radio_select_exclusive_fields = ("does_not_exist",)
 
@@ -155,7 +155,7 @@ def test_field_not_on_model_but_declared_on_form_is_radioized(request_, site):
             model = Image
             fields = ["title", "is_primary", "approved"]
 
-    class ExtraFieldInline(RadioSelectMixin, djadmin.TabularInline):
+    class ExtraFieldInline(ExclusiveRadioFieldsMixin, djadmin.TabularInline):
         model = Image
         form = ExtraFieldForm
         radio_select_exclusive_fields = ("approved",)
@@ -178,7 +178,7 @@ def test_form_field_type_overriding_model_field_type_is_radioized(request_, site
             model = Image
             fields = ["title", "is_primary"]
 
-    class BooleanTitleInline(RadioSelectMixin, djadmin.TabularInline):
+    class BooleanTitleInline(ExclusiveRadioFieldsMixin, djadmin.TabularInline):
         model = Image
         form = BooleanTitleForm
         radio_select_exclusive_fields = ("title",)
@@ -190,7 +190,7 @@ def test_form_field_type_overriding_model_field_type_is_radioized(request_, site
 
 
 def test_readonly_fields_are_excluded_by_default(request_, site):
-    class PartlyReadonlyInline(RadioSelectMixin, djadmin.TabularInline):
+    class PartlyReadonlyInline(ExclusiveRadioFieldsMixin, djadmin.TabularInline):
         model = Image
         radio_select_exclusive_fields = ("is_primary", "is_featured")
         readonly_fields = ("is_primary",)
@@ -206,7 +206,7 @@ def test_readonly_field_does_not_crash_get_formset(request_, site):
     # from the form (Django never puts a readonly field in
     # form.base_fields), even though nothing here is actually
     # misconfigured.
-    class PartlyReadonlyInline(RadioSelectMixin, djadmin.TabularInline):
+    class PartlyReadonlyInline(ExclusiveRadioFieldsMixin, djadmin.TabularInline):
         model = Image
         radio_select_exclusive_fields = ("is_primary", "is_featured")
         readonly_fields = ("is_primary",)
@@ -219,7 +219,7 @@ def test_readonly_field_does_not_crash_get_formset(request_, site):
 
 
 def test_get_radio_select_exclusive_fields_overrides_the_attribute(request_, site):
-    class DynamicInline(RadioSelectMixin, djadmin.TabularInline):
+    class DynamicInline(ExclusiveRadioFieldsMixin, djadmin.TabularInline):
         model = Image
         radio_select_exclusive_fields = ("title",)  # would raise if actually used
 
@@ -246,7 +246,7 @@ def test_media_is_pulled_in_by_the_rendered_formset_when_a_field_is_radioized(re
 
 
 def test_media_is_absent_when_no_field_is_radioized(request_, site):
-    class PlainInline(RadioSelectMixin, djadmin.TabularInline):
+    class PlainInline(ExclusiveRadioFieldsMixin, djadmin.TabularInline):
         model = Image
         radio_select_exclusive_fields = ()
 

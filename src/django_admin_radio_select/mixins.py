@@ -15,8 +15,10 @@ if TYPE_CHECKING:
     from django.forms.models import BaseInlineFormSet, BaseModelFormSet
     from django.http import HttpRequest
 
+_FormSetT = TypeVar("_FormSetT", bound="BaseModelFormSet")
 
-class RadioSelectMixin(BaseModelAdmin):
+
+class ExclusiveRadioFieldsMixin(BaseModelAdmin):
     """Mixin for ``ModelAdmin``, ``TabularInline``, or ``StackedInline``
     that renders the ``BooleanField``\\ s named in
     ``radio_select_exclusive_fields`` as radio buttons, synchronized
@@ -33,7 +35,7 @@ class RadioSelectMixin(BaseModelAdmin):
 
     Meant to sit before ``admin.ModelAdmin``/``admin.TabularInline``/
     ``admin.StackedInline`` in a subclass's bases, e.g.
-    ``class ImageInline(RadioSelectMixin, admin.TabularInline)``.
+    ``class ImageInline(ExclusiveRadioFieldsMixin, admin.TabularInline)``.
     Inheriting from ``BaseModelAdmin`` — the common base of both
     ``ModelAdmin`` and ``InlineModelAdmin`` — rather than staying a bare
     mixin gives ``self``/``super()`` their real types for free; the
@@ -73,39 +75,40 @@ class RadioSelectMixin(BaseModelAdmin):
     ) -> type[BaseInlineFormSet]:
         formset_class = super().get_formset(request, obj, **kwargs)  # type: ignore[misc]
         field_names = tuple(self.get_radio_select_exclusive_fields(request, obj))
-        return _wrap_formset(formset_class, field_names)
+        return self._wrap_formset(formset_class, field_names)
 
     def get_changelist_formset(self, request: HttpRequest, **kwargs: Any) -> type[BaseModelFormSet]:
         formset_class = super().get_changelist_formset(request, **kwargs)  # type: ignore[misc]
         field_names = tuple(self.get_radio_select_exclusive_fields(request))
-        return _wrap_formset(formset_class, field_names)
+        return self._wrap_formset(formset_class, field_names)
 
+    @staticmethod
+    def _wrap_formset(
+        formset_class: type[_FormSetT], field_names: Sequence[str]
+    ) -> type[_FormSetT]:
+        if not field_names:
+            return formset_class
 
-_FormSetT = TypeVar("_FormSetT", bound="BaseModelFormSet")
+        prefix = formset_class.get_default_prefix()
+        ExclusiveRadioFieldsMixin._radioize_form_fields(formset_class.form, field_names, prefix)
+        return make_radio_select_exclusive_formset(formset_class, field_names)
 
-
-def _wrap_formset(formset_class: type[_FormSetT], field_names: Sequence[str]) -> type[_FormSetT]:
-    if not field_names:
-        return formset_class
-
-    prefix = formset_class.get_default_prefix()
-    _radioize_form_fields(formset_class.form, field_names, prefix)
-    return make_radio_select_exclusive_formset(formset_class, field_names)
-
-
-def _radioize_form_fields(
-    form_class: type[forms.ModelForm], field_names: Sequence[str], prefix: str
-) -> None:
-    for field_name in field_names:
-        field = form_class.base_fields.get(field_name)
-        if not isinstance(field, forms.BooleanField):
-            raise ImproperlyConfigured(
-                f"{form_class.__name__}: radio_select_exclusive_fields references "
-                f"'{field_name}', which must be a BooleanField on the form "
-                f"(got {field.__class__.__name__ if field else 'nothing'})."
+    @staticmethod
+    def _radioize_form_fields(
+        form_class: type[forms.ModelForm], field_names: Sequence[str], prefix: str
+    ) -> None:
+        for field_name in field_names:
+            field = form_class.base_fields.get(field_name)
+            if not isinstance(field, forms.BooleanField):
+                raise ImproperlyConfigured(
+                    f"{form_class.__name__}: radio_select_exclusive_fields references "
+                    f"'{field_name}', which must be a BooleanField on the form "
+                    f"(got {field.__class__.__name__ if field else 'nothing'})."
+                )
+            field.widget = RadioCheckboxInput(
+                group=f"{prefix}::{field_name}", field_name=field_name
             )
-        field.widget = RadioCheckboxInput(group=f"{prefix}::{field_name}", field_name=field_name)
-        # A "must be checked" BooleanField can't represent the "this row
-        # isn't the selected one" (False) state, which is a completely
-        # valid, expected state for every row but one.
-        field.required = False
+            # A "must be checked" BooleanField can't represent the "this
+            # row isn't the selected one" (False) state, which is a
+            # completely valid, expected state for every row but one.
+            field.required = False

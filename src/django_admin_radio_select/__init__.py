@@ -1,5 +1,5 @@
-from .mixins import RadioSelectMixin
+from .mixins import ExclusiveRadioFieldsMixin
 
-__all__ = ["RadioSelectMixin"]
+__all__ = ["ExclusiveRadioFieldsMixin"]
 
 __version__ = "0.1.0"
