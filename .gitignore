@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# venvs
+.venv/
+venv/
+
+# pytest / coverage / mypy
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Django example project
+example/db.sqlite3
+example/db.sqlite3-journal
+example/staticfiles/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
