@@ -61,6 +61,64 @@ def test_saving_after_switching_the_inline_row_persists(page: Page, live_server,
 
 
 @pytest.mark.django_db(transaction=True)
+def test_dynamically_added_inline_row_joins_the_exclusive_group(
+    page: Page, live_server, django_user_model
+):
+    # Not a row we built ourselves: clicking Django admin's own "Add
+    # another" link (inlines.js), same as a real user would, to prove
+    # the delegated JS listener picks up a node it never saw at load
+    # time.
+    album = Album.objects.create(title="Holiday")
+    Image.objects.create(album=album, title="Beach", is_primary=True)
+
+    _login(page, live_server.url, django_user_model)
+    page.goto(f"{live_server.url}/admin/gallery/album/{album.pk}/change/")
+
+    beach = page.locator('input[name="images-0-is_primary"]')
+    expect(beach).to_be_checked()
+
+    total_forms = page.locator('input[name="images-TOTAL_FORMS"]')
+    before_count = int(total_forms.input_value())
+
+    page.get_by_role("button", name="Add another Image").click()
+
+    expect(total_forms).to_have_value(str(before_count + 1))
+    new_index = before_count
+    new_row_title = page.locator(f'input[name="images-{new_index}-title"]')
+    new_row_primary = page.locator(f'input[name="images-{new_index}-is_primary"]')
+    expect(new_row_title).to_be_visible()
+
+    new_row_title.fill("Sunset")
+    new_row_primary.check()
+
+    expect(new_row_primary).to_be_checked()
+    expect(beach).not_to_be_checked()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_saving_after_adding_a_new_inline_row_persists_it_as_the_selected_one(
+    page: Page, live_server, django_user_model
+):
+    album = Album.objects.create(title="Holiday")
+    Image.objects.create(album=album, title="Beach", is_primary=True)
+
+    _login(page, live_server.url, django_user_model)
+    page.goto(f"{live_server.url}/admin/gallery/album/{album.pk}/change/")
+
+    total_forms = page.locator('input[name="images-TOTAL_FORMS"]')
+    new_index = int(total_forms.input_value())
+
+    page.get_by_role("button", name="Add another Image").click()
+    page.locator(f'input[name="images-{new_index}-title"]').fill("Sunset")
+    page.locator(f'input[name="images-{new_index}-is_primary"]').check()
+    page.locator('input[name="_save"]').click()
+
+    expect(page).to_have_url(f"{live_server.url}/admin/gallery/album/")
+    images = {image.title: image.is_primary for image in album.images.all()}
+    assert images == {"Beach": False, "Sunset": True}
+
+
+@pytest.mark.django_db(transaction=True)
 def test_selecting_one_changelist_row_unchecks_the_others_in_the_browser(
     page: Page, live_server, django_user_model
 ):
