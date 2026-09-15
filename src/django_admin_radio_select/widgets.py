@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from django import forms
 from django.forms.widgets import CheckboxInput
 
 
@@ -33,6 +32,9 @@ class RadioCheckboxInput(CheckboxInput):
     from "change form" apart.
     """
 
+    class Media:
+        js = ("django_admin_radio_select/radio-select.js",)
+
     input_type = "radio"
 
     def __init__(self, group: str, field_name: str, attrs: dict[str, Any] | None = None) -> None:
@@ -41,7 +43,3 @@ class RadioCheckboxInput(CheckboxInput):
         attrs["data-radio-select-group"] = group
         attrs["data-radio-select-field"] = field_name
         super().__init__(attrs=attrs)
-
-    @property
-    def media(self) -> forms.Media:
-        return forms.Media(js=("django_admin_radio_select/radio-select.js",))

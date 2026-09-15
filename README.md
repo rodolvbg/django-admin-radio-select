@@ -83,15 +83,17 @@ class ImageInline(RadioSelectMixin, admin.TabularInline):
     radio_select_exclusive_fields = ("is_primary", "is_featured")
 ```
 
-Compute the field list per request instead of (or in addition to) the class attribute:
+Compute the field list per request (and, for an inline or a change form, per object) instead of (or in addition to) the class attribute:
 
 ```python
 class ImageInline(RadioSelectMixin, admin.TabularInline):
     model = Image
 
-    def get_radio_select_exclusive_fields(self, request):
+    def get_radio_select_exclusive_fields(self, request, obj=None):
         return ("is_primary",) if request.user.is_superuser else ()
 ```
+
+The default implementation already drops any field that's currently in `get_readonly_fields(request, obj)` — a readonly field isn't rendered as an editable widget at all, so there's nothing to turn into a radio button. This matters for a field that's only conditionally readonly (permissions, object state, ...): without it, a field in `radio_select_exclusive_fields` that becomes readonly for some request would no longer be on the form at all and raise `ImproperlyConfigured`, for a state the admin class itself put it in. Overriding `get_radio_select_exclusive_fields` replaces this default entirely, so an override that needs the same behavior should apply its own `get_readonly_fields` check too.
 
 Each configured name must be a `BooleanField` present on the form; anything else raises `ImproperlyConfigured` when the admin builds the formset (a `python manage.py check`-time-ish failure, not a silent no-op).
 

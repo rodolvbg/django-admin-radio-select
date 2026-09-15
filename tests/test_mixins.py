@@ -1,4 +1,5 @@
 import pytest
+from django import forms
 from django.contrib import admin as djadmin
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ImproperlyConfigured
@@ -143,12 +144,86 @@ def test_missing_field_raises_improperly_configured(request_, site):
         inline.get_formset(request_)
 
 
+def test_field_not_on_model_but_declared_on_form_is_radioized(request_, site):
+    # `approved` doesn't exist on the Image model at all — only on this
+    # custom form. The mixin works off form.base_fields, never the
+    # model, so this must work the same as any other configured field.
+    class ExtraFieldForm(forms.ModelForm):
+        approved = forms.BooleanField(required=False)
+
+        class Meta:
+            model = Image
+            fields = ["title", "is_primary", "approved"]
+
+    class ExtraFieldInline(RadioSelectMixin, djadmin.TabularInline):
+        model = Image
+        form = ExtraFieldForm
+        radio_select_exclusive_fields = ("approved",)
+
+    inline = ExtraFieldInline(Album, site)
+    formset_class = inline.get_formset(request_)
+
+    assert isinstance(formset_class.form.base_fields["approved"].widget, RadioCheckboxInput)
+
+
+def test_form_field_type_overriding_model_field_type_is_radioized(request_, site):
+    # `title` is a plain CharField on the Image model, but a form is
+    # free to redeclare it as something else entirely. What matters for
+    # radio_select_exclusive_fields is the form's field type, not the
+    # model's.
+    class BooleanTitleForm(forms.ModelForm):
+        title = forms.BooleanField(required=False)
+
+        class Meta:
+            model = Image
+            fields = ["title", "is_primary"]
+
+    class BooleanTitleInline(RadioSelectMixin, djadmin.TabularInline):
+        model = Image
+        form = BooleanTitleForm
+        radio_select_exclusive_fields = ("title",)
+
+    inline = BooleanTitleInline(Album, site)
+    formset_class = inline.get_formset(request_)
+
+    assert isinstance(formset_class.form.base_fields["title"].widget, RadioCheckboxInput)
+
+
+def test_readonly_fields_are_excluded_by_default(request_, site):
+    class PartlyReadonlyInline(RadioSelectMixin, djadmin.TabularInline):
+        model = Image
+        radio_select_exclusive_fields = ("is_primary", "is_featured")
+        readonly_fields = ("is_primary",)
+
+    inline = PartlyReadonlyInline(Album, site)
+
+    assert inline.get_radio_select_exclusive_fields(request_) == ("is_featured",)
+
+
+def test_readonly_field_does_not_crash_get_formset(request_, site):
+    # Without the get_readonly_fields filter, this would raise
+    # ImproperlyConfigured for a field the admin class itself excluded
+    # from the form (Django never puts a readonly field in
+    # form.base_fields), even though nothing here is actually
+    # misconfigured.
+    class PartlyReadonlyInline(RadioSelectMixin, djadmin.TabularInline):
+        model = Image
+        radio_select_exclusive_fields = ("is_primary", "is_featured")
+        readonly_fields = ("is_primary",)
+
+    inline = PartlyReadonlyInline(Album, site)
+    formset_class = inline.get_formset(request_)
+
+    assert "is_primary" not in formset_class.form.base_fields
+    assert isinstance(formset_class.form.base_fields["is_featured"].widget, RadioCheckboxInput)
+
+
 def test_get_radio_select_exclusive_fields_overrides_the_attribute(request_, site):
     class DynamicInline(RadioSelectMixin, djadmin.TabularInline):
         model = Image
         radio_select_exclusive_fields = ("title",)  # would raise if actually used
 
-        def get_radio_select_exclusive_fields(self, request):
+        def get_radio_select_exclusive_fields(self, request, obj=None):
             return ("is_primary",)
 
     inline = DynamicInline(Album, site)

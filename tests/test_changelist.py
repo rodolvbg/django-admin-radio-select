@@ -1,4 +1,5 @@
 import pytest
+from django import forms
 from django.contrib import admin as djadmin
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ImproperlyConfigured
@@ -91,6 +92,43 @@ def test_field_missing_from_list_editable_raises_improperly_configured(request_,
 
     with pytest.raises(ImproperlyConfigured, match="is_featured"):
         album_admin.get_changelist_formset(request_)
+
+
+def test_field_not_on_model_but_declared_on_changelist_form_is_radioized(request_, site):
+    # `approved` doesn't exist on the Album model at all — only on this
+    # custom changelist form. The mixin works off form.base_fields,
+    # never the model, so this has to work the same as any other field.
+    class ExtraFieldForm(forms.ModelForm):
+        approved = forms.BooleanField(required=False)
+
+        class Meta:
+            model = Album
+            fields = ["title", "is_featured"]
+
+    class ExtraFieldAlbumAdmin(RadioSelectMixin, djadmin.ModelAdmin):
+        list_display = ("title", "is_featured", "approved")
+        list_editable = ("is_featured",)
+        radio_select_exclusive_fields = ("approved",)
+
+        def get_changelist_form(self, request, **kwargs):
+            return ExtraFieldForm
+
+    album_admin = ExtraFieldAlbumAdmin(Album, site)
+    formset_class = album_admin.get_changelist_formset(request_)
+
+    assert isinstance(formset_class.form.base_fields["approved"].widget, RadioCheckboxInput)
+
+
+def test_readonly_fields_are_excluded_by_default(request_, site):
+    class PartlyReadonlyAlbumAdmin(RadioSelectMixin, djadmin.ModelAdmin):
+        list_display = ("title", "is_featured")
+        list_editable = ("is_featured",)
+        radio_select_exclusive_fields = ("is_featured",)
+        readonly_fields = ("is_featured",)
+
+    album_admin = PartlyReadonlyAlbumAdmin(Album, site)
+
+    assert album_admin.get_radio_select_exclusive_fields(request_) == ()
 
 
 def test_media_is_pulled_in_by_the_rendered_formset_when_a_field_is_radioized(request_, site):

@@ -52,14 +52,27 @@ class RadioSelectMixin(BaseModelAdmin):
 
     radio_select_exclusive_fields: Sequence[str] = ()
 
-    def get_radio_select_exclusive_fields(self, request: HttpRequest) -> Sequence[str]:
-        return tuple(self.radio_select_exclusive_fields)
+    def get_radio_select_exclusive_fields(
+        self, request: HttpRequest, obj: Model | None = None
+    ) -> Sequence[str]:
+        # A readonly field is never part of form.base_fields as an
+        # editable widget (Django renders it as plain text instead), so
+        # radioizing it would either be a no-op or, if it's also missing
+        # from the form for that reason, raise ImproperlyConfigured for
+        # something the caller didn't really misconfigure — e.g. a field
+        # only made readonly for some requests via get_readonly_fields.
+        readonly_fields = set(self.get_readonly_fields(request, obj))
+        return tuple(
+            field_name
+            for field_name in self.radio_select_exclusive_fields
+            if field_name not in readonly_fields
+        )
 
     def get_formset(
         self, request: HttpRequest, obj: Model | None = None, **kwargs: Any
     ) -> type[BaseInlineFormSet]:
         formset_class = super().get_formset(request, obj, **kwargs)  # type: ignore[misc]
-        field_names = tuple(self.get_radio_select_exclusive_fields(request))
+        field_names = tuple(self.get_radio_select_exclusive_fields(request, obj))
         return _wrap_formset(formset_class, field_names)
 
     def get_changelist_formset(self, request: HttpRequest, **kwargs: Any) -> type[BaseModelFormSet]:
