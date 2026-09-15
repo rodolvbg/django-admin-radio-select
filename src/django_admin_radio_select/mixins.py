@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Protocol, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from django import forms
+from django.contrib.admin.options import BaseModelAdmin
 from django.core.exceptions import ImproperlyConfigured
 
 from .formsets import make_radio_select_exclusive_formset
@@ -14,38 +15,8 @@ if TYPE_CHECKING:
     from django.forms.models import BaseInlineFormSet, BaseModelFormSet
     from django.http import HttpRequest
 
-    class _InlineModelAdminLike(Protocol):
-        """The slice of ``InlineModelAdmin`` ``get_formset`` needs from
-        ``self``. A ``Protocol`` (structural) rather than the real
-        ``InlineModelAdmin`` (nominal) so type checkers don't require
-        ``RadioSelectMixin`` to actually inherit from it — it stays a
-        real mixin at runtime, cooperating through ``super()`` with
-        whatever ``InlineModelAdmin`` subclass it's combined with.
-        """
 
-        radio_select_exclusive_fields: Sequence[str]
-
-        def get_radio_select_exclusive_fields(self, request: HttpRequest) -> Sequence[str]: ...
-
-        def get_formset(
-            self, request: HttpRequest, obj: Model | None = ..., **kwargs: Any
-        ) -> type[BaseInlineFormSet]: ...
-
-    class _ModelAdminLike(Protocol):
-        """Same idea as ``_InlineModelAdminLike``, for the slice of
-        ``ModelAdmin`` ``get_changelist_formset`` needs.
-        """
-
-        radio_select_exclusive_fields: Sequence[str]
-
-        def get_radio_select_exclusive_fields(self, request: HttpRequest) -> Sequence[str]: ...
-
-        def get_changelist_formset(
-            self, request: HttpRequest, **kwargs: Any
-        ) -> type[BaseModelFormSet]: ...
-
-
-class RadioSelectMixin:
+class RadioSelectMixin(BaseModelAdmin):
     """Mixin for ``ModelAdmin``, ``TabularInline``, or ``StackedInline``
     that renders the ``BooleanField``\\ s named in
     ``radio_select_exclusive_fields`` as radio buttons, synchronized
@@ -60,42 +31,39 @@ class RadioSelectMixin:
       an editable column at all; ``radio_select_exclusive_fields`` only
       controls how that column renders and is validated, same as inline.
 
-    This is a plain mixin, not an ``InlineModelAdmin``/``ModelAdmin``
-    subclass: it relies on cooperative ``super()`` calls and is meant to
-    sit before ``admin.ModelAdmin``/``admin.TabularInline``/
-    ``admin.StackedInline`` in a subclass's bases. The
-    ``self: _InlineModelAdminLike`` / ``self: _ModelAdminLike``
-    annotations below are for type checkers only and have no runtime
-    effect; the ``# type: ignore`` on each ``super()`` call silences
-    mypy's ``safe-super`` check, which doesn't know the ``Protocol``
-    method it's resolving against is really backed by a concrete
-    ``InlineModelAdmin``/``ModelAdmin`` at runtime.
+    Meant to sit before ``admin.ModelAdmin``/``admin.TabularInline``/
+    ``admin.StackedInline`` in a subclass's bases, e.g.
+    ``class ImageInline(RadioSelectMixin, admin.TabularInline)``.
+    Inheriting from ``BaseModelAdmin`` — the common base of both
+    ``ModelAdmin`` and ``InlineModelAdmin`` — rather than staying a bare
+    mixin gives ``self``/``super()`` their real types for free; the
+    ``# type: ignore[misc]`` on each ``super()`` call below is only
+    because ``BaseModelAdmin`` itself doesn't declare ``get_formset``/
+    ``get_changelist_formset`` (only the concrete ``InlineModelAdmin``/
+    ``ModelAdmin`` a using class also inherits from do), so a type
+    checker can't confirm they'll exist until the two are combined.
+
+    See ``RadioCheckboxInput.media`` for how the JS gets loaded — not
+    from a ``media`` property here, since ``ModelAdmin.media`` /
+    ``InlineModelAdmin.media`` are computed the same way no matter which
+    view is asking, so a property here couldn't tell a changelist render
+    apart from a change-form render.
     """
 
     radio_select_exclusive_fields: Sequence[str] = ()
 
-    class Media:
-        js = ("django_admin_radio_select/radio-select.js",)
-
-    def get_radio_select_exclusive_fields(
-        self: _InlineModelAdminLike | _ModelAdminLike, request: HttpRequest
-    ) -> Sequence[str]:
+    def get_radio_select_exclusive_fields(self, request: HttpRequest) -> Sequence[str]:
         return tuple(self.radio_select_exclusive_fields)
 
     def get_formset(
-        self: _InlineModelAdminLike,
-        request: HttpRequest,
-        obj: Model | None = None,
-        **kwargs: Any,
+        self, request: HttpRequest, obj: Model | None = None, **kwargs: Any
     ) -> type[BaseInlineFormSet]:
-        formset_class = super().get_formset(request, obj, **kwargs)  # type: ignore[safe-super]
+        formset_class = super().get_formset(request, obj, **kwargs)  # type: ignore[misc]
         field_names = tuple(self.get_radio_select_exclusive_fields(request))
         return _wrap_formset(formset_class, field_names)
 
-    def get_changelist_formset(
-        self: _ModelAdminLike, request: HttpRequest, **kwargs: Any
-    ) -> type[BaseModelFormSet]:
-        formset_class = super().get_changelist_formset(request, **kwargs)  # type: ignore[safe-super]
+    def get_changelist_formset(self, request: HttpRequest, **kwargs: Any) -> type[BaseModelFormSet]:
+        formset_class = super().get_changelist_formset(request, **kwargs)  # type: ignore[misc]
         field_names = tuple(self.get_radio_select_exclusive_fields(request))
         return _wrap_formset(formset_class, field_names)
 

@@ -157,8 +157,26 @@ def test_get_radio_select_exclusive_fields_overrides_the_attribute(request_, sit
     assert isinstance(formset_class.form.base_fields["is_primary"].widget, RadioCheckboxInput)
 
 
-def test_media_includes_the_js_asset(site):
+def test_media_is_pulled_in_by_the_rendered_formset_when_a_field_is_radioized(request_, site):
+    # Not `inline.media` itself: that's computed the same way regardless
+    # of whether this inline is actually radio-configured, so it can't
+    # be the thing gating "only load the JS when it's actually used".
+    # The widget carries its own media, which a rendered formset (or
+    # form) picks up automatically only because the widget is present.
     inline = ImageTabularInline(Album, site)
-    js_paths = [str(s) for s in inline.media._js]
+    formset_class = inline.get_formset(request_)
+    js_paths = [str(s) for s in formset_class().media._js]
 
     assert any("django_admin_radio_select/radio-select.js" in p for p in js_paths)
+
+
+def test_media_is_absent_when_no_field_is_radioized(request_, site):
+    class PlainInline(RadioSelectMixin, djadmin.TabularInline):
+        model = Image
+        radio_select_exclusive_fields = ()
+
+    inline = PlainInline(Album, site)
+    formset_class = inline.get_formset(request_)
+    js_paths = [str(s) for s in formset_class().media._js]
+
+    assert not any("django_admin_radio_select/radio-select.js" in p for p in js_paths)

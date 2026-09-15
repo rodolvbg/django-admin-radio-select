@@ -93,11 +93,25 @@ def test_field_missing_from_list_editable_raises_improperly_configured(request_,
         album_admin.get_changelist_formset(request_)
 
 
-def test_media_includes_the_js_asset(site):
+def test_media_is_pulled_in_by_the_rendered_formset_when_a_field_is_radioized(request_, site):
+    # Not `album_admin.media` itself: that's the same regardless of
+    # which view (changelist vs. change form) is asking, so it can't be
+    # what scopes the JS to "only on the changelist, only if needed".
+    album_admin = AlbumAdmin(Album, site)
+    formset_class = album_admin.get_changelist_formset(request_)
+    js_paths = [str(s) for s in formset_class(queryset=Album.objects.none()).media._js]
+
+    assert any("django_admin_radio_select/radio-select.js" in p for p in js_paths)
+
+
+def test_media_is_absent_from_the_plain_admin_media(site):
+    # The plain ModelAdmin.media (used for every page, including the
+    # regular add/change form) must NOT carry this script — only a
+    # formset that actually contains the radioized field does.
     album_admin = AlbumAdmin(Album, site)
     js_paths = [str(s) for s in album_admin.media._js]
 
-    assert any("django_admin_radio_select/radio-select.js" in p for p in js_paths)
+    assert not any("django_admin_radio_select/radio-select.js" in p for p in js_paths)
 
 
 @pytest.fixture

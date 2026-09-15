@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from django import forms
 from django.forms.widgets import CheckboxInput
 
 
@@ -17,6 +18,19 @@ class RadioCheckboxInput(CheckboxInput):
     Django form/formset completely unchanged; only the rendered control
     (and therefore its default browser styling and grouping semantics)
     is different.
+
+    ``media`` lives here rather than on the admin mixin on purpose: a
+    widget only exists once a field is actually radioized, and only ever
+    gets *rendered* as part of the specific form/formset that uses it —
+    Django aggregates a rendered page's media from exactly the
+    forms/widgets it renders. So this script only ever loads on a
+    changelist that actually has a ``list_editable`` radio column, or a
+    change view that actually has a radioized inline — never anywhere
+    else — with no extra request- or view-awareness needed here. An
+    admin-level ``media`` property couldn't do this: Django computes
+    ``ModelAdmin.media``/``InlineModelAdmin.media`` the same way
+    regardless of which view asked for it, so it can't tell "changelist"
+    from "change form" apart.
     """
 
     input_type = "radio"
@@ -27,3 +41,7 @@ class RadioCheckboxInput(CheckboxInput):
         attrs["data-radio-select-group"] = group
         attrs["data-radio-select-field"] = field_name
         super().__init__(attrs=attrs)
+
+    @property
+    def media(self) -> forms.Media:
+        return forms.Media(js=("django_admin_radio_select/radio-select.js",))
