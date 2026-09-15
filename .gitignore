@@ -24,6 +24,10 @@ example/db.sqlite3
 example/db.sqlite3-journal
 example/staticfiles/
 
+# Node / JS tooling
+node_modules/
+coverage/
+
 # Editors / OS
 .vscode/
 .idea/

@@ -92,33 +92,4 @@ Python 3.10–3.13, Django 4.2–5.2. Currently supports `TabularInline` and `St
 
 ## Development
 
-Managed with [uv](https://docs.astral.sh/uv/):
-
-```bash
-uv sync
-```
-
-Run the example project:
-
-```bash
-uv run python example/manage.py migrate
-uv run python example/manage.py createsuperuser
-uv run python example/manage.py runserver
-```
-
-It's a minimal Album → Image gallery (`example/gallery`) with both a `TabularInline` and a `StackedInline` registration, so both can be exercised by hand at `/admin/`.
-
-Run the tests:
-
-```bash
-uv run pytest
-uv run coverage run -m pytest && uv run coverage report
-```
-
-Lint, format, and type-check:
-
-```bash
-uv run ruff check .
-uv run ruff format --check .
-uv run mypy src example
-```
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, running the example project, and the test/lint/type-check commands.

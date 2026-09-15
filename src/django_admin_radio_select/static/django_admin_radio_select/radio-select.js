@@ -1,6 +1,4 @@
-"use strict";
-
-(function () {
+(() => {
     var SELECTOR = 'input[type="radio"].radio-select-exclusive';
 
     function escapeAttrValue(value) {
@@ -12,8 +10,12 @@
 
     function uncheckOthersInGroup(radio) {
         var group = radio.dataset.radioSelectGroup;
-        var selector = SELECTOR + '[data-radio-select-group="' + escapeAttrValue(group) + '"]';
-        document.querySelectorAll(selector).forEach(function (other) {
+        var selector =
+            SELECTOR +
+            '[data-radio-select-group="' +
+            escapeAttrValue(group) +
+            '"]';
+        document.querySelectorAll(selector).forEach((other) => {
             if (other !== radio) {
                 other.checked = false;
             }
@@ -24,9 +26,9 @@
     // later too (Django admin's "Add another"), since `change` bubbles
     // from any input inserted into the page — no MutationObserver or
     // dependency on Django's internal jQuery formset events needed.
-    document.addEventListener("change", function (event) {
+    document.addEventListener("change", (event) => {
         var radio = event.target;
-        if (radio.matches && radio.matches(SELECTOR) && radio.checked) {
+        if (radio.matches?.(SELECTOR) && radio.checked) {
             uncheckOthersInGroup(radio);
         }
     });
