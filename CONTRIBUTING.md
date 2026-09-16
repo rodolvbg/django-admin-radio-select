@@ -14,7 +14,7 @@ npm install                          # installs vitest for the JS unit tests
 
 - `src/django_admin_radio_select/` — the library (`mixins.py`, `widgets.py`, `formsets.py`, static JS).
 - `example/` — a minimal Django project (`gallery` app: `Album` → `Image`) used both for manual local development and as the models/settings the test suite runs against.
-- `tests/` — pytest tests (`test_package.py`, `test_widgets.py`, `test_mixins.py`, `test_formsets.py`, `test_admin_integration.py`, `test_changelist.py`, `test_e2e.py`) and vitest tests (`tests/js/`).
+- `tests/` — pytest tests (`test_package.py`, `test_widgets.py`, `test_mixins.py`, `test_formsets.py`, `test_admin_integration.py`, `test_changelist.py`), browser end-to-end tests (`tests/e2e/`), and vitest tests (`tests/js/`).
 
 ## Running the example project
 
@@ -40,7 +40,7 @@ uv run pytest
 
 Coverage runs automatically (via `pytest-cov`, configured in `pyproject.toml`) and prints a report after the test run — only files with actual gaps are listed (`skip_covered`); a fully-covered file just counts toward the "N files skipped due to complete coverage" line. Tests run against `example.settings` with `--no-migrations` — tables are built straight from the models, so migrations and tests can't drift out of sync.
 
-`tests/test_e2e.py` is included in that same `uv run pytest` run: real end-to-end tests via [`pytest-playwright`](https://playwright.dev/python/docs/test-runners), driving a real Chromium against a real Django server (`pytest-django`'s `live_server` fixture) — the JS module and the server-side validation, actually working together, not each mocked out for the other. They need `uv run playwright install chromium` once (see Setup above) and are slower than the rest of the suite; everything else here is unit/integration-level and doesn't touch a browser.
+`tests/e2e/test_e2e.py` is included in that same `uv run pytest` run: real end-to-end tests via [`pytest-playwright`](https://playwright.dev/python/docs/test-runners), driving a real Chromium against a real Django server (`pytest-django`'s `live_server` fixture) — the JS module and the server-side validation, actually working together, not each mocked out for the other. They need `uv run playwright install chromium` once (see Setup above) and are slower than the rest of the suite; everything else here is unit/integration-level and doesn't touch a browser.
 
 ## JS unit tests (vitest)
 
