@@ -45,10 +45,10 @@ Coverage runs automatically (via `pytest-cov`, configured in `pyproject.toml`) a
 ## JS unit tests (vitest)
 
 ```bash
-npm test
+npm run coverage
 ```
 
-`src/django_admin_radio_select/static/django_admin_radio_select/radio-select.js` is a small, dependency-free script with no build step: `tests/js/radio-select.test.js` imports it directly for its side effect (registering the delegated `change` listener on `document`, exactly as a real page load would) and drives it with jsdom. `npm test` also runs with coverage (`@vitest/coverage-v8`, configured in `vitest.config.js`) and prints a report after the test run.
+`src/django_admin_radio_select/static/django_admin_radio_select/radio-select.js` is a small, dependency-free script with no build step: `tests/js/radio-select.test.js` imports it directly for its side effect (registering the delegated `change` listener on `document`, exactly as a real page load would) and drives it with jsdom. `npm test` runs the suite without coverage; `npm run coverage` (used in CI) also runs it with coverage (`@vitest/coverage-v8`, configured in `vitest.config.js`) and prints a report after the test run.
 
 ## Lint, format, type-check
 
@@ -69,6 +69,6 @@ uv run pre-commit run --all-files
 
 ```bash
 uv run pytest
-npm test
+npm run coverage
 uv run pre-commit run --all-files
 ```

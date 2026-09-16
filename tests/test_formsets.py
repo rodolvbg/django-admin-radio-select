@@ -16,7 +16,9 @@ def request_(rf: RequestFactory, django_user_model):
     # can_delete flag are both gated on has_change_permission() /
     # has_delete_permission(), so an unprivileged user silently makes
     # saves and deletions no-ops regardless of what our mixin does.
-    user = django_user_model.objects.create_superuser("admin", "admin@example.com", "password")
+    user = django_user_model.objects.create_superuser(
+        "admin", "admin@example.com", "password"
+    )
     request = rf.get("/admin/")
     request.user = user
     return request
@@ -86,7 +88,9 @@ def test_no_selected_row_is_valid(request_, site, album):
 
 
 def test_malformed_post_with_two_true_rows_is_rejected(request_, site, album):
-    data = management_data(album, rows={0: {"is_primary": True}, 1: {"is_primary": True}})
+    data = management_data(
+        album, rows={0: {"is_primary": True}, 1: {"is_primary": True}}
+    )
     formset = build_formset(request_, site, album, data)
 
     assert not formset.is_valid()
@@ -96,7 +100,9 @@ def test_malformed_post_with_two_true_rows_is_rejected(request_, site, album):
 def test_two_true_rows_on_different_fields_is_valid(request_, site, album):
     # is_primary and is_featured are independent groups: one True each
     # is fine even though it's the same two rows.
-    data = management_data(album, rows={0: {"is_primary": True}, 1: {"is_featured": True}})
+    data = management_data(
+        album, rows={0: {"is_primary": True}, 1: {"is_featured": True}}
+    )
     formset = build_formset(request_, site, album, data)
 
     assert formset.is_valid(), formset.errors
@@ -122,7 +128,9 @@ def test_saving_a_valid_formset_persists_exactly_one_true_row(request_, site, al
     assert images == {"A": False, "B": True}
 
 
-def test_dynamically_added_row_can_be_submitted_and_becomes_the_selected_one(request_, site, album):
+def test_dynamically_added_row_can_be_submitted_and_becomes_the_selected_one(
+    request_, site, album
+):
     # What Django admin's "Add another" produces client-side: an extra
     # form beyond INITIAL_FORMS, with no "id" (new row) and a title.
     data = management_data(album, extra_forms=1)
@@ -139,10 +147,14 @@ def test_dynamically_added_row_can_be_submitted_and_becomes_the_selected_one(req
     assert images == {"A": False, "B": False, "C": True}
 
 
-def test_exclusivity_check_is_skipped_when_a_row_already_has_field_errors(request_, site, album):
+def test_exclusivity_check_is_skipped_when_a_row_already_has_field_errors(
+    request_, site, album
+):
     # If a row's own fields are invalid, our formset-level clean() must
     # not layer a second, more confusing error on top of it.
-    data = management_data(album, rows={0: {"is_primary": True}, 1: {"is_primary": True}})
+    data = management_data(
+        album, rows={0: {"is_primary": True}, 1: {"is_primary": True}}
+    )
     data["images-0-title"] = ""  # title is required: this row is already invalid
 
     formset = build_formset(request_, site, album, data)
@@ -170,7 +182,9 @@ def test_user_supplied_formset_clean_is_preserved(request_, site, album):
     inline = CustomInline(Album, site)
     formset_class = inline.get_formset(request_)
 
-    data = management_data(album, rows={0: {"is_primary": True}, 1: {"is_primary": True}})
+    data = management_data(
+        album, rows={0: {"is_primary": True}, 1: {"is_primary": True}}
+    )
     formset = formset_class(data, instance=album)
 
     assert not formset.is_valid()

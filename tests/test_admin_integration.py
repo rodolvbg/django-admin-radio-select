@@ -51,7 +51,9 @@ def test_change_form_renders_radio_inputs(admin_client, album):
     assert 'data-radio-select-group="images::is_primary"' in content
 
 
-def test_switching_the_primary_row_and_saving_persists_through_the_admin_view(admin_client, album):
+def test_switching_the_primary_row_and_saving_persists_through_the_admin_view(
+    admin_client, album
+):
     url = reverse("admin:gallery_album_change", args=[album.pk])
     data = _base_post_data(album)
     # Switch: unselect row 0 (A), select row 1 (B) — as JS would leave

@@ -57,7 +57,9 @@ class ExclusiveRadioFieldsMixinTests(TestCase):
 
         with self.subTest("does not filter readonly fields itself"):
 
-            class PartlyReadonlyInline(ExclusiveRadioFieldsMixin, djadmin.TabularInline):
+            class PartlyReadonlyInline(
+                ExclusiveRadioFieldsMixin, djadmin.TabularInline
+            ):
                 model = Image
                 radio_select_exclusive_fields = ("is_primary", "is_featured")
                 readonly_fields = ("is_primary",)
@@ -72,7 +74,9 @@ class ExclusiveRadioFieldsMixinTests(TestCase):
 
             class DynamicInline(ExclusiveRadioFieldsMixin, djadmin.TabularInline):
                 model = Image
-                radio_select_exclusive_fields = ("title",)  # would raise if actually used
+                radio_select_exclusive_fields = (
+                    "title",
+                )  # would raise if actually used
 
                 def get_radio_select_exclusive_fields(self, request, obj=None):
                     return ("is_primary",)
@@ -95,10 +99,13 @@ class ExclusiveRadioFieldsMixinTests(TestCase):
         with self.subTest("drops fields that are currently readonly"):
             inline = PartlyReadonlyInline(Album, self.site)
             self.assertEqual(
-                inline._get_effective_radio_select_exclusive_fields(request), ("is_featured",)
+                inline._get_effective_radio_select_exclusive_fields(request),
+                ("is_featured",),
             )
 
-        with self.subTest("still filters when get_radio_select_exclusive_fields is overridden"):
+        with self.subTest(
+            "still filters when get_radio_select_exclusive_fields is overridden"
+        ):
 
             class DynamicInline(ExclusiveRadioFieldsMixin, djadmin.TabularInline):
                 model = Image
@@ -109,7 +116,8 @@ class ExclusiveRadioFieldsMixinTests(TestCase):
 
             inline = DynamicInline(Album, self.site)
             self.assertEqual(
-                inline._get_effective_radio_select_exclusive_fields(request), ("is_featured",)
+                inline._get_effective_radio_select_exclusive_fields(request),
+                ("is_featured",),
             )
 
         with self.subTest("a readonly field does not crash get_formset"):
@@ -133,11 +141,15 @@ class ExclusiveRadioFieldsMixinTests(TestCase):
                     model = Image
                     fields = ["title", "is_primary"]
 
-            ExclusiveRadioFieldsMixin._radioize_form_fields(Form, ("is_primary",), "images")
+            ExclusiveRadioFieldsMixin._radioize_form_fields(
+                Form, ("is_primary",), "images"
+            )
             field = Form.base_fields["is_primary"]
             self.assertIsInstance(field.widget, RadioCheckboxInput)
             self.assertFalse(field.required)
-            self.assertEqual(field.widget.attrs["data-radio-select-group"], "images::is_primary")
+            self.assertEqual(
+                field.widget.attrs["data-radio-select-group"], "images::is_primary"
+            )
 
         with self.subTest("raises ImproperlyConfigured for a missing field"):
 
@@ -166,15 +178,27 @@ class ExclusiveRadioFieldsMixinTests(TestCase):
     # -- _wrap_formset (staticmethod) ---------------------------------------
 
     def test_wrap_formset(self):
-        with self.subTest("returns the formset unchanged when no fields are configured"):
-            formset_class = inlineformset_factory(Album, Image, fields=["title", "is_primary"])
+        with self.subTest(
+            "returns the formset unchanged when no fields are configured"
+        ):
+            formset_class = inlineformset_factory(
+                Album, Image, fields=["title", "is_primary"]
+            )
             wrapped = ExclusiveRadioFieldsMixin._wrap_formset(formset_class, ())
             self.assertIs(wrapped, formset_class)
 
-        with self.subTest("radioizes the field and wraps it with exclusivity validation"):
-            formset_class = inlineformset_factory(Album, Image, fields=["title", "is_primary"])
-            wrapped = ExclusiveRadioFieldsMixin._wrap_formset(formset_class, ("is_primary",))
-            self.assertIsInstance(wrapped.form.base_fields["is_primary"].widget, RadioCheckboxInput)
+        with self.subTest(
+            "radioizes the field and wraps it with exclusivity validation"
+        ):
+            formset_class = inlineformset_factory(
+                Album, Image, fields=["title", "is_primary"]
+            )
+            wrapped = ExclusiveRadioFieldsMixin._wrap_formset(
+                formset_class, ("is_primary",)
+            )
+            self.assertIsInstance(
+                wrapped.form.base_fields["is_primary"].widget, RadioCheckboxInput
+            )
             self.assertTrue(issubclass(wrapped, formset_class))
             self.assertIsNot(wrapped, formset_class)
 
@@ -194,7 +218,8 @@ class ExclusiveRadioFieldsMixinTests(TestCase):
             formset_class = ImageStackedInline(Album, self.site).get_formset(request)
             for field_name in ("is_primary", "is_featured"):
                 self.assertIsInstance(
-                    formset_class.form.base_fields[field_name].widget, RadioCheckboxInput
+                    formset_class.form.base_fields[field_name].widget,
+                    RadioCheckboxInput,
                 )
 
         with self.subTest("initial selected state renders checked on the right row"):
@@ -217,8 +242,12 @@ class ExclusiveRadioFieldsMixinTests(TestCase):
         with self.subTest("multiple configured fields get independent group keys"):
             formset_class = ImageTabularInline(Album, self.site).get_formset(request)
             base_fields = formset_class.form.base_fields
-            primary_group = base_fields["is_primary"].widget.attrs["data-radio-select-group"]
-            featured_group = base_fields["is_featured"].widget.attrs["data-radio-select-group"]
+            primary_group = base_fields["is_primary"].widget.attrs[
+                "data-radio-select-group"
+            ]
+            featured_group = base_fields["is_featured"].widget.attrs[
+                "data-radio-select-group"
+            ]
             self.assertNotEqual(primary_group, featured_group)
             self.assertTrue(primary_group.endswith("::is_primary"))
             self.assertTrue(featured_group.endswith("::is_featured"))
@@ -235,7 +264,9 @@ class ExclusiveRadioFieldsMixinTests(TestCase):
             formset_class = ImageTabularInline(Album, self.site).get_formset(request)
             formset = formset_class(instance=album)
             bound_group = (
-                formset.forms[0].fields["is_primary"].widget.attrs["data-radio-select-group"]
+                formset.forms[0]
+                .fields["is_primary"]
+                .widget.attrs["data-radio-select-group"]
             )
             empty_group = formset.empty_form.fields["is_primary"].widget.attrs[
                 "data-radio-select-group"
@@ -262,7 +293,9 @@ class ExclusiveRadioFieldsMixinTests(TestCase):
             with self.assertRaises(ImproperlyConfigured):
                 BadInline(Album, self.site).get_formset(request)
 
-        with self.subTest("field not on the model but declared on the form is radioized"):
+        with self.subTest(
+            "field not on the model but declared on the form is radioized"
+        ):
 
             class ExtraFieldForm(forms.ModelForm):
                 approved = forms.BooleanField(required=False)
@@ -337,12 +370,16 @@ class ExclusiveRadioFieldsMixinTests(TestCase):
                 list_editable = ("is_featured",)
                 radio_select_exclusive_fields = ()
 
-            formset_class = PlainAlbumAdmin(Album, self.site).get_changelist_formset(request)
+            formset_class = PlainAlbumAdmin(Album, self.site).get_changelist_formset(
+                request
+            )
             self.assertNotIsInstance(
                 formset_class.form.base_fields["is_featured"].widget, RadioCheckboxInput
             )
 
-        with self.subTest("propagates ImproperlyConfigured for a field missing from list_editable"):
+        with self.subTest(
+            "propagates ImproperlyConfigured for a field missing from list_editable"
+        ):
 
             class BadAlbumAdmin(ExclusiveRadioFieldsMixin, djadmin.ModelAdmin):
                 list_display = ("title",)
@@ -371,7 +408,9 @@ class ExclusiveRadioFieldsMixinTests(TestCase):
                 def get_changelist_form(self, request, **kwargs):
                     return ExtraFieldForm
 
-            formset_class = ExtraFieldAlbumAdmin(Album, self.site).get_changelist_formset(request)
+            formset_class = ExtraFieldAlbumAdmin(
+                Album, self.site
+            ).get_changelist_formset(request)
             self.assertIsInstance(
                 formset_class.form.base_fields["approved"].widget, RadioCheckboxInput
             )
@@ -381,10 +420,14 @@ class ExclusiveRadioFieldsMixinTests(TestCase):
     def test_media(self):
         request = self._request()
 
-        with self.subTest("pulled in by the rendered inline formset when a field is radioized"):
+        with self.subTest(
+            "pulled in by the rendered inline formset when a field is radioized"
+        ):
             formset_class = ImageTabularInline(Album, self.site).get_formset(request)
             js_paths = [str(s) for s in formset_class().media._js]
-            self.assertTrue(any("django_admin_radio_select/radio-select.js" in p for p in js_paths))
+            self.assertTrue(
+                any("django_admin_radio_select/radio-select.js" in p for p in js_paths)
+            )
 
         with self.subTest("absent from the inline formset when no field is radioized"):
 
@@ -398,12 +441,20 @@ class ExclusiveRadioFieldsMixinTests(TestCase):
                 any("django_admin_radio_select/radio-select.js" in p for p in js_paths)
             )
 
-        with self.subTest("pulled in by the rendered changelist formset when a field is radioized"):
+        with self.subTest(
+            "pulled in by the rendered changelist formset when a field is radioized"
+        ):
             formset_class = AlbumAdmin(Album, self.site).get_changelist_formset(request)
-            js_paths = [str(s) for s in formset_class(queryset=Album.objects.none()).media._js]
-            self.assertTrue(any("django_admin_radio_select/radio-select.js" in p for p in js_paths))
+            js_paths = [
+                str(s) for s in formset_class(queryset=Album.objects.none()).media._js
+            ]
+            self.assertTrue(
+                any("django_admin_radio_select/radio-select.js" in p for p in js_paths)
+            )
 
-        with self.subTest("absent from the plain ModelAdmin.media (used on every page)"):
+        with self.subTest(
+            "absent from the plain ModelAdmin.media (used on every page)"
+        ):
             js_paths = [str(s) for s in AlbumAdmin(Album, self.site).media._js]
             self.assertFalse(
                 any("django_admin_radio_select/radio-select.js" in p for p in js_paths)

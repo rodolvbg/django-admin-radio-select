@@ -18,7 +18,9 @@ class RadioCheckboxInputTests(SimpleTestCase):
     def test_init(self):
         with self.subTest("sets the data attrs for field name and group"):
             widget = _widget()
-            self.assertEqual(widget.attrs["data-radio-select-group"], "images::is_primary")
+            self.assertEqual(
+                widget.attrs["data-radio-select-group"], "images::is_primary"
+            )
             self.assertEqual(widget.attrs["data-radio-select-field"], "is_primary")
 
         with self.subTest("adds the exclusive marker class"):
@@ -60,9 +62,13 @@ class RadioCheckboxInputTests(SimpleTestCase):
             self.assertIs(widget.value_from_datadict({}, {}, "is_primary"), False)
 
         with self.subTest("present in the data means True"):
-            self.assertIs(widget.value_from_datadict({"is_primary": "on"}, {}, "is_primary"), True)
+            self.assertIs(
+                widget.value_from_datadict({"is_primary": "on"}, {}, "is_primary"), True
+            )
 
     def test_media(self):
         js_paths = [str(script) for script in _widget().media._js]
 
-        self.assertTrue(any("django_admin_radio_select/radio-select.js" in p for p in js_paths))
+        self.assertTrue(
+            any("django_admin_radio_select/radio-select.js" in p for p in js_paths)
+        )

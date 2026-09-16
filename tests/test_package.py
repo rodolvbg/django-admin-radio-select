@@ -1,7 +1,9 @@
 import django_admin_radio_select
 from django_admin_radio_select import ExclusiveRadioFieldsMixin
 from django_admin_radio_select.formsets import make_radio_select_exclusive_formset
-from django_admin_radio_select.mixins import ExclusiveRadioFieldsMixin as MixinFromModule
+from django_admin_radio_select.mixins import (
+    ExclusiveRadioFieldsMixin as MixinFromModule,
+)
 from django_admin_radio_select.widgets import RadioCheckboxInput
 
 

@@ -33,7 +33,9 @@ class _AdminE2ETestCase(StaticLiveServerTestCase):
         self.page = page
 
     def login(self) -> None:
-        get_user_model().objects.create_superuser("admin", "admin@example.com", "password")
+        get_user_model().objects.create_superuser(
+            "admin", "admin@example.com", "password"
+        )
         self.page.goto(f"{self.live_server_url}/admin/login/")
         self.page.fill('input[name="username"]', "admin")
         self.page.fill('input[name="password"]', "password")
@@ -52,7 +54,9 @@ class _AdminE2ETestCase(StaticLiveServerTestCase):
 
 class TestInlineExclusivity(_AdminE2ETestCase):
     def test_selecting_one_row_unchecks_the_others_in_the_browser(self):
-        album = self.create_album(images=(("Beach", True), ("Mountain", False), ("City", False)))
+        album = self.create_album(
+            images=(("Beach", True), ("Mountain", False), ("City", False))
+        )
         self.login()
         self.open_change_page(album)
 
@@ -99,7 +103,9 @@ class TestInlineExclusivity(_AdminE2ETestCase):
 
         expect(total_forms).to_have_value(str(new_index + 1))
         new_row_title = self.page.locator(f'input[name="images-{new_index}-title"]')
-        new_row_primary = self.page.locator(f'input[name="images-{new_index}-is_primary"]')
+        new_row_primary = self.page.locator(
+            f'input[name="images-{new_index}-is_primary"]'
+        )
         expect(new_row_title).to_be_visible()
 
         new_row_title.fill("Sunset")

@@ -39,7 +39,8 @@ def make_radio_select_exclusive_formset(
                 selected = [
                     form
                     for form in self.forms
-                    if not self._should_delete_form(form) and form.cleaned_data.get(field_name)
+                    if not self._should_delete_form(form)
+                    and form.cleaned_data.get(field_name)
                 ]
                 if len(selected) > 1:
                     raise forms.ValidationError(

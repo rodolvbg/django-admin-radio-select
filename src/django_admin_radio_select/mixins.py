@@ -84,7 +84,9 @@ class ExclusiveRadioFieldsMixin(BaseModelAdmin):
         field_names = self._get_effective_radio_select_exclusive_fields(request, obj)
         return self._wrap_formset(formset_class, field_names)
 
-    def get_changelist_formset(self, request: HttpRequest, **kwargs: Any) -> type[BaseModelFormSet]:
+    def get_changelist_formset(
+        self, request: HttpRequest, **kwargs: Any
+    ) -> type[BaseModelFormSet]:
         formset_class = super().get_changelist_formset(request, **kwargs)  # type: ignore[misc]
         field_names = self._get_effective_radio_select_exclusive_fields(request)
         return self._wrap_formset(formset_class, field_names)
@@ -97,7 +99,9 @@ class ExclusiveRadioFieldsMixin(BaseModelAdmin):
             return formset_class
 
         prefix = formset_class.get_default_prefix()
-        ExclusiveRadioFieldsMixin._radioize_form_fields(formset_class.form, field_names, prefix)
+        ExclusiveRadioFieldsMixin._radioize_form_fields(
+            formset_class.form, field_names, prefix
+        )
         return make_radio_select_exclusive_formset(formset_class, field_names)
 
     @staticmethod

@@ -37,7 +37,9 @@ class RadioCheckboxInput(CheckboxInput):
 
     input_type = "radio"
 
-    def __init__(self, group: str, field_name: str, attrs: dict[str, Any] | None = None) -> None:
+    def __init__(
+        self, group: str, field_name: str, attrs: dict[str, Any] | None = None
+    ) -> None:
         attrs = dict(attrs or {})
         attrs["class"] = f"{attrs.get('class', '')} radio-select-exclusive".strip()
         attrs["data-radio-select-group"] = group

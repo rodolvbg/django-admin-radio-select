@@ -68,7 +68,9 @@ def test_switching_the_featured_album_and_saving_persists_through_the_admin_view
     assert featured == {"Winter": False, "Spring": True, "Summer": False}
 
 
-def test_posting_two_featured_albums_is_rejected_by_the_admin_view(admin_client, albums):
+def test_posting_two_featured_albums_is_rejected_by_the_admin_view(
+    admin_client, albums
+):
     data = _base_post_data(albums)
     data["form-1-is_featured"] = "on"  # Winter already featured; now Spring too
 
