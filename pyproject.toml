@@ -40,6 +40,8 @@ optional-dependencies.dev = [
   "pytest-django>=4.8",
   "pytest-playwright>=0.5",
   "ruff>=0.6",
+  "tox>=4",
+  "tox-uv>=1",
 ]
 urls.Homepage = "https://github.com/rodolvbg/django-admin-radio-select"
 urls.Repository = "https://github.com/rodolvbg/django-admin-radio-select"
@@ -55,6 +57,8 @@ dev = [
   "pytest-django>=4.8",
   "pytest-playwright>=0.5",
   "ruff>=0.6",
+  "tox>=4",
+  "tox-uv>=1",
 ]
 
 [tool.hatch]
