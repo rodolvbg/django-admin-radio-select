@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- django-unfold support: with `unfold` installed, the radios get Unfold's
+  own radio classes.
+
 - Compatibility matrix via tox (`[tool.tox]` in `pyproject.toml`, using
   [tox-uv](https://github.com/tox-dev/tox-uv)): tests every Django series
   in `classifiers` (4.2 through 5.2) against its oldest and newest

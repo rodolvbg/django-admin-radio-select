@@ -118,6 +118,11 @@ class AlbumAdmin(ExclusiveRadioFieldsMixin, admin.ModelAdmin):
 
 Now only one `Album` row in the whole changelist can have `is_featured` checked at a time — same client-side sync, same per-row Django field names (`form-0-is_featured`, `form-1-is_featured`, ...), same server-side exclusivity check on save.
 
+## Themes
+
+- [django-unfold](docs/themes/unfold.md): works as it is, with Unfold's
+  radios.
+
 ## Supported versions
 
 Python 3.10–3.13, Django 4.2–5.2. Works on `TabularInline`, `StackedInline`, and `ModelAdmin` (via `list_editable`).

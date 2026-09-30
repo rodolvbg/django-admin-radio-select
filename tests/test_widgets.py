@@ -72,3 +72,35 @@ class RadioCheckboxInputTests(SimpleTestCase):
         self.assertTrue(
             any("django_admin_radio_select/radio-select.js" in p for p in js_paths)
         )
+
+
+class ThemeClassesTests(SimpleTestCase):
+    def test_theme_classes(self):
+        from unittest import mock
+
+        from django_admin_radio_select import widgets
+
+        installed = "django_admin_radio_select.widgets.apps.is_installed"
+
+        with self.subTest("none without Unfold"):
+            with mock.patch(installed, return_value=False):
+                self.assertEqual(widgets.theme_classes(), [])
+                self.assertEqual(_widget().attrs["class"], "radio-select-exclusive")
+
+        with self.subTest("Unfold's radio classes with it"):
+            fake = mock.Mock(RADIO_CLASSES=["appearance-none", "rounded-full"])
+            with (
+                mock.patch(installed, return_value=True),
+                mock.patch.dict("sys.modules", {"unfold.widgets": fake}),
+            ):
+                self.assertEqual(
+                    _widget(attrs={"class": "mine"}).attrs["class"],
+                    "mine appearance-none rounded-full radio-select-exclusive",
+                )
+
+        with self.subTest("none with an Unfold that has no radio classes"):
+            with (
+                mock.patch(installed, return_value=True),
+                mock.patch.dict("sys.modules", {"unfold.widgets": None}),
+            ):
+                self.assertEqual(widgets.theme_classes(), [])

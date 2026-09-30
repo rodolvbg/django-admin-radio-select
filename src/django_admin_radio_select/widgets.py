@@ -2,10 +2,23 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from django.apps import apps
 from django.forms.widgets import CheckboxInput
 
 if TYPE_CHECKING:
     from typing import Any
+
+
+def theme_classes() -> list[str]:
+    """CSS classes of the admin theme's own radios: django-unfold's, when it
+    is installed (its styles only cover the classes it uses itself)."""
+    if not apps.is_installed("unfold"):
+        return []
+    try:
+        from unfold.widgets import RADIO_CLASSES
+    except ImportError:  # an Unfold without them: the browser's radio
+        return []
+    return list(RADIO_CLASSES)
 
 
 class RadioCheckboxInput(CheckboxInput):
@@ -44,7 +57,8 @@ class RadioCheckboxInput(CheckboxInput):
         self, group: str, field_name: str, attrs: dict[str, Any] | None = None
     ) -> None:
         attrs = dict(attrs or {})
-        attrs["class"] = f"{attrs.get('class', '')} radio-select-exclusive".strip()
+        classes = [attrs.get("class", ""), *theme_classes(), "radio-select-exclusive"]
+        attrs["class"] = " ".join(name for name in classes if name)
         attrs["data-radio-select-group"] = group
         attrs["data-radio-select-field"] = field_name
         super().__init__(attrs=attrs)
