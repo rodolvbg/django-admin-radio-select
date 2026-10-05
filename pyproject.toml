@@ -4,7 +4,7 @@ requires = [ "hatchling" ]
 
 [project]
 name = "django-admin-radio-select"
-version = "0.1.0"
+version = "0.1.1"
 description = "Synchronize BooleanFields across Django Admin inline rows as mutually exclusive radio button groups."
 readme = "README.md"
 license = "MIT"

@@ -31,12 +31,12 @@ Selecting one clears the others, enforced with a small vanilla JS module. Every 
 
 Inline formset, before and after clicking a different row's radio — note `is_primary` switches from "Snowy Peak" to "Frozen Lake" while the independent `is_featured` column ("Cabin") is untouched:
 
-![Inline radio-select columns](docs/screenshots/inline-radio-select.png)
-![Inline radio-select columns after clicking a different row](docs/screenshots/inline-radio-select-after-click.png)
+![Inline radio-select columns](https://github.com/rodolvbg/django-admin-radio-select/blob/master/docs/screenshots/inline-radio-select.png)
+![Inline radio-select columns after clicking a different row](https://github.com/rodolvbg/django-admin-radio-select/blob/master/docs/screenshots/inline-radio-select-after-click.png)
 
 Same behavior on a `ModelAdmin` changelist, via `list_editable` (see below):
 
-![Changelist radio-select column](docs/screenshots/changelist-radio-select.png)
+![Changelist radio-select column](https://github.com/rodolvbg/django-admin-radio-select/blob/master/docs/screenshots/changelist-radio-select.png)
 
 ## Install
 
@@ -120,7 +120,7 @@ Now only one `Album` row in the whole changelist can have `is_featured` checked 
 
 ## Themes
 
-- [django-unfold](docs/themes/unfold.md): works as it is, with Unfold's
+- [django-unfold](https://github.com/rodolvbg/django-admin-radio-select/blob/master/docs/themes/unfold.md): works as it is, with Unfold's
   radios.
 
 ## Supported versions
@@ -129,4 +129,4 @@ Python 3.10–3.13, Django 4.2–5.2. Works on `TabularInline`, `StackedInline`,
 
 ## Development
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, running the example project, and the test/lint/type-check commands.
+See [CONTRIBUTING.md](https://github.com/rodolvbg/django-admin-radio-select/blob/master/CONTRIBUTING.md) for setup, running the example project, and the test/lint/type-check commands.
