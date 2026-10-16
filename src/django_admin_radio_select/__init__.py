@@ -10,5 +10,4 @@ raise ImportError(
     "'django_admin_radio_select', and import ExclusiveRadioFieldsMixin (or "
     "AdminTablesMixin) from django_admin_tables: "
     "https://github.com/rodolvbg/django-admin-tables"
-    "#migrating-from-django-admin-radio-select-or-django-admin-fk-links"
 )
