@@ -1,21 +1,14 @@
-"""django-admin-radio-select is now part of django-admin-rows.
+"""django-admin-radio-select is now part of django-admin-tables.
 
-This package only keeps the old imports working: use ``django_admin_rows``
-(``from django_admin_rows import ExclusiveRadioFieldsMixin``) instead.
+This last release has no code: install django-admin-tables instead.
 """
 
-import warnings
-
-from django_admin_rows.radio_select import ExclusiveRadioFieldsMixin
-
-warnings.warn(
-    "django-admin-radio-select is now part of django-admin-rows: install "
-    "django-admin-rows, import from django_admin_rows and put "
-    "'django_admin_rows' in INSTALLED_APPS instead.",
-    DeprecationWarning,
-    stacklevel=2,
+raise ImportError(
+    "django-admin-radio-select is now part of django-admin-tables, and this "
+    "last release has no code. Uninstall it, install django-admin-tables, put "
+    "'django_admin_tables' in INSTALLED_APPS instead of "
+    "'django_admin_radio_select', and import ExclusiveRadioFieldsMixin (or "
+    "AdminTablesMixin) from django_admin_tables: "
+    "https://github.com/rodolvbg/django-admin-tables"
+    "#migrating-from-django-admin-radio-select-or-django-admin-fk-links"
 )
-
-__all__ = ["ExclusiveRadioFieldsMixin"]
-
-__version__ = "0.1.3"
