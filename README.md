@@ -1,132 +1,29 @@
 # django-admin-radio-select
 
-[![Python tests](https://github.com/rodolvbg/django-admin-radio-select/actions/workflows/pytest.yml/badge.svg)](https://github.com/rodolvbg/django-admin-radio-select/actions/workflows/pytest.yml)
-[![JavaScript tests](https://github.com/rodolvbg/django-admin-radio-select/actions/workflows/js-tests.yml/badge.svg)](https://github.com/rodolvbg/django-admin-radio-select/actions/workflows/js-tests.yml)
 [![Current version on PyPI](https://img.shields.io/pypi/v/django-admin-radio-select.svg)](https://pypi.org/project/django-admin-radio-select/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/django-admin-radio-select)](https://pypi.org/project/django-admin-radio-select/)
-[![PyPI - Django Version](https://img.shields.io/pypi/djversions/django-admin-radio-select)](https://pypi.org/project/django-admin-radio-select/)
-[![Downloads](https://static.pepy.tech/personalized-badge/django-admin-radio-select?period=month&units=international_system&left_color=black&right_color=blue&left_text=Downloads/month)](https://pepy.tech/project/django-admin-radio-select)
 
-Synchronize BooleanFields across Django Admin inline rows as mutually exclusive radio button groups.
+> **This package is now part of
+> [django-admin-rows](https://github.com/rodolvbg/django-admin-rows)**,
+> with the same `ExclusiveRadioFieldsMixin` and new row-level extras for the
+> Django admin. This last release only keeps the old imports working, with a
+> `DeprecationWarning`; it gets no new features.
 
-## Problem
-
-An inline `BooleanField` column renders as independent checkboxes:
-
-```text
-Image A    [ ]
-Image B    [x]
-Image C    [ ]
-```
-
-Nothing stops you from checking more than one — but often only one row should ever be true (the primary image, the default address, the featured item). This package renders that column as radio buttons instead:
-
-```text
-Image A    ( )
-Image B    (•)
-Image C    ( )
-```
-
-Selecting one clears the others, enforced with a small vanilla JS module. Every row still POSTs under its own normal Django-generated field name (e.g. `images-0-is_primary`, `images-1-is_primary`) — nothing here relies on giving different forms the same HTML `name`. A formset-level check on the server also rejects a handcrafted POST that tries to set more than one row true, so the guarantee doesn't depend on JavaScript running at all.
-
-Inline formset, before and after clicking a different row's radio — note `is_primary` switches from "Snowy Peak" to "Frozen Lake" while the independent `is_featured` column ("Cabin") is untouched:
-
-![Inline radio-select columns](docs/screenshots/inline-radio-select.png)
-![Inline radio-select columns after clicking a different row](docs/screenshots/inline-radio-select-after-click.png)
-
-Same behavior on a `ModelAdmin` changelist, via `list_editable` (see below):
-
-![Changelist radio-select column](docs/screenshots/changelist-radio-select.png)
-
-## Install
+## Migrating
 
 ```bash
-uv add django-admin-radio-select
-# or
-pip install django-admin-radio-select
+pip uninstall django-admin-radio-select
+pip install django-admin-rows
 ```
 
-Add it to `INSTALLED_APPS` — it's a real Django app (with its own `AppConfig`), which is what makes `django.contrib.staticfiles` pick up its JS:
+| Before | After |
+|---|---|
+| `"django_admin_radio_select"` in `INSTALLED_APPS` | `"django_admin_rows"` |
+| `from django_admin_radio_select import ExclusiveRadioFieldsMixin` | `from django_admin_rows import ExclusiveRadioFieldsMixin` |
+| `django_admin_radio_select.widgets` / `.formsets` / `.mixins` | `django_admin_rows.radio_select.widgets` / `.formsets` / `.mixins` |
 
-```python
-INSTALLED_APPS = [
-    ...,
-    "django_admin_radio_select",
-]
-```
+The options (`radio_select_exclusive_fields`,
+`get_radio_select_exclusive_fields()`) and the behavior are the same: see
+[django-admin-rows' README](https://github.com/rodolvbg/django-admin-rows#exclusive-radio-fields).
 
-## Usage
-
-```python
-from django.contrib import admin
-from django_admin_radio_select import ExclusiveRadioFieldsMixin
-
-from .models import Album, Image
-
-
-class ImageInline(ExclusiveRadioFieldsMixin, admin.TabularInline):
-    model = Image
-    radio_select_exclusive_fields = ("is_primary",)
-
-
-@admin.register(Album)
-class AlbumAdmin(admin.ModelAdmin):
-    inlines = [ImageInline]
-```
-
-Works the same way with `StackedInline`:
-
-```python
-class ImageInline(ExclusiveRadioFieldsMixin, admin.StackedInline):
-    model = Image
-    radio_select_exclusive_fields = ("is_primary",)
-```
-
-Multiple fields are independent groups:
-
-```python
-class ImageInline(ExclusiveRadioFieldsMixin, admin.TabularInline):
-    model = Image
-    radio_select_exclusive_fields = ("is_primary", "is_featured")
-```
-
-Compute the field list per request (and, for an inline or a change form, per object) instead of (or in addition to) the class attribute:
-
-```python
-class ImageInline(ExclusiveRadioFieldsMixin, admin.TabularInline):
-    model = Image
-
-    def get_radio_select_exclusive_fields(self, request, obj=None):
-        return ("is_primary",) if request.user.is_superuser else ()
-```
-
-Whatever `get_radio_select_exclusive_fields` returns — the default above, or an override like the one above it — always gets filtered against `get_readonly_fields(request, obj)` before being used: a readonly field isn't rendered as an editable widget at all, so there's nothing to turn into a radio button. This matters for a field that's only conditionally readonly (permissions, object state, ...): without it, a field in `radio_select_exclusive_fields` that becomes readonly for some request would no longer be on the form at all and raise `ImproperlyConfigured`, for a state the admin class itself put it in. This filtering happens in a separate `_get_effective_radio_select_exclusive_fields(request, obj)` method precisely so overriding `get_radio_select_exclusive_fields` doesn't also have to reimplement it.
-
-Each configured name must be a `BooleanField` present on the **form** — anything else raises `ImproperlyConfigured` when the admin builds the formset (a `python manage.py check`-time-ish failure, not a silent no-op). "Present on the form" is deliberate: the field only has to exist there, not on the model. A field declared only on a custom `ModelForm`/`InlineModelAdmin.form` (not a real model field at all) works exactly the same as any other configured field, and so does a form field that overrides the model's own type for that name (e.g. the model has a `CharField` but the form redeclares it as a `BooleanField`) — this package never inspects the model, only `form.base_fields`.
-
-### `ModelAdmin` changelist (`list_editable`)
-
-The same mixin also works directly on a `ModelAdmin`, for a `BooleanField` column made editable in the changelist via `list_editable`. The field still has to be in `list_display` too — that's a normal Django `list_editable` requirement, unrelated to this package:
-
-```python
-@admin.register(Album)
-class AlbumAdmin(ExclusiveRadioFieldsMixin, admin.ModelAdmin):
-    list_display = ("title", "is_featured")
-    list_editable = ("is_featured",)
-    radio_select_exclusive_fields = ("is_featured",)
-```
-
-Now only one `Album` row in the whole changelist can have `is_featured` checked at a time — same client-side sync, same per-row Django field names (`form-0-is_featured`, `form-1-is_featured`, ...), same server-side exclusivity check on save.
-
-## Themes
-
-- [django-unfold](docs/themes/unfold.md): works as it is, with Unfold's
-  radios.
-
-## Supported versions
-
-Python 3.10–3.13, Django 4.2–5.2. Works on `TabularInline`, `StackedInline`, and `ModelAdmin` (via `list_editable`).
-
-## Development
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, running the example project, and the test/lint/type-check commands.
+Until you migrate, this release installs django-admin-rows and keeps
+working as it is, `INSTALLED_APPS` included.

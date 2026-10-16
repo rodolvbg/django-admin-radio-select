@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.3] - Unreleased
+
+### Changed
+
+- Moved to [django-admin-rows](https://github.com/rodolvbg/django-admin-rows).
+  This release depends on it and only keeps the old imports and
+  `INSTALLED_APPS` entry working, with a `DeprecationWarning`.
+
+---
+
 ## [0.1.2] - 2026-10-07
 
 ### Fixed
